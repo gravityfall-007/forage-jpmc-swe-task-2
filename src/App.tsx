@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean,
 }
 
 /**
@@ -18,31 +19,39 @@ class App extends Component<{}, IState> {
   constructor(props: {}) {
     super(props);
 
+    // Initialize the component's state
     this.state = {
-      // data saves the server responds.
-      // We use this state to parse data down to the child element (Graph) as element property
-      data: [],
+      data: [],      // Stores the server responses
+      showGraph: false,  // Controls whether to display the graph
     };
   }
 
   /**
-   * Render Graph react component with state.data parse as property data
+   * Renders the Graph component if showGraph is true
+   * @returns {JSX.Element|null} The Graph component or null
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    if (this.state.showGraph){
+      return (<Graph data={this.state.data}/>)
+    }  
   }
 
-  /**
-   * Get new data from server and update the state with the new data
-   */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+    let x = 0;
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        this.setState({
+          data: serverResponds,
+          showGraph: true,
+        });
+      });
+      x++;
+      // Stop fetching data after 1000 iterations
+      if (x > 1000) {
+        clearInterval(interval);
+      }
+    }, 100);  // Fetch data every 100ms
   }
-
   /**
    * Render the App react component
    */
